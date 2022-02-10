@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Test stack for a single ec2 instance
+Parameters:
+  ServerAMI:
+    Type: String
+    Default: ami-0fb653ca2d3203ac1
+  ServerInstanceType:
+    Type: String
+    Default: t3.small
+  DefaultVPCID: 
+    Type: 'AWS::EC2::VPC::Id'
+    Default: vpc-0495a893483f64b86
+    Type: String
+  SubnetID:
+    Type: 'AWS::EC2::Subnet::Id'
+    Default: subnet-01d6710db5342f73f
+    MinLength: '1'
+    MaxLength: '255'
+    Type: String
+  KeyName:
+    Default: abc
+    Type: String
+Resources:
+  EC2Instance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: !Ref ServerAMI
+      InstanceType: !Ref ServerInstanceType
+      KeyName: !Ref KeyName
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 600
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: 'false'
+          DeleteOnTermination: 'true'
+          DeviceIndex: '0'
+          GroupSet:
+            - Ref: ServerSecurityGroup
+          SubnetId: !Ref SubnetID
+      Tags:
+        - Key: Name
+          Value: !Ref 'AWS::StackName'
+  ServerSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Webserver security group
+      VpcId: !Ref DefaultVPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
+          Description: Test Instance
